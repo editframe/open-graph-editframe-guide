@@ -4,6 +4,7 @@ import { serialize } from "next-mdx-remote/serialize";
 import { Editframe } from "@editframe/editframe-js";
 import Head from "next/head";
 import redis from "../../lib/redis";
+import getConfig from "next/config";
 
 const PostPage = ({
   frontMatter: { title, description },
@@ -60,7 +61,11 @@ const getServerSideProps = async ({ req, res, params }) => {
   const { slug } = params;
   const fs = await import("fs").then((m) => m.default);
   const path = await import("path").then((m) => m.default); // works, does nothing
-  const file = path.join(process.cwd(), "posts", slug + ".mdx"); // file is available
+  const file = path.join(
+    getConfig().serverRuntimeConfig.PROJECT_ROOT,
+    "posts",
+    slug + ".mdx"
+  ); // file is available
 
   const markdownWithMeta = fs.readFileSync(file, "utf-8");
   const features = await redis.hvals("features");
