@@ -5,8 +5,7 @@ import matter from "gray-matter";
 import { serialize } from "next-mdx-remote/serialize";
 import { Editframe } from "@editframe/editframe-js";
 import Head from "next/head";
-import redisClient from "../lib/redis";
-
+import redis from '../../lib/redis'
 const PostPage = ({
   frontMatter: { title, description },
   mdxSource,
@@ -15,6 +14,7 @@ const PostPage = ({
   return (
     <>
       <Head>
+        <title>{title}</title>
         <meta property="og:title" content={title} />
         <meta property="og:type" content="video.episode" />
         <meta property="og:description" content={description} />
@@ -56,27 +56,17 @@ const PostPage = ({
   );
 };
 
-const getStaticPaths = async () => {
-  const files = fs.readdirSync(path.join("posts"));
+const getServerSideProps = async ({ req, res, params }) => {
+  console.log(params);
+  const { slug } = params;
 
-  const paths = files.map((filename) => ({
-    params: {
-      slug: filename.replace(".mdx", ""),
-    },
-  }));
-
-  return {
-    paths,
-    fallback: false,
-  };
-};
-
-const getStaticProps = async ({ params: { slug } }) => {
   const markdownWithMeta = fs.readFileSync(
     path.join("posts", slug + ".mdx"),
     "utf-8"
   );
+    const features = (await redis.hvals('features'))
 
+    console.log(features)
   const { data: frontMatter, content } = matter(markdownWithMeta);
   const mdxSource = await serialize(content);
   const editframe = new Editframe({
@@ -121,11 +111,11 @@ const getStaticProps = async ({ params: { slug } }) => {
     }
   );
   let video;
-  let videoCached = await redisClient.get(JSON.stringify({ slug }));
+  let videoCached = await redis.get(JSON.stringify({ slug }));
   if (videoCached == null) {
     video = await composition.encode({ synchronously: true });
     if (video && video.streamUrl) {
-      await redisClient.set(JSON.stringify({ slug }), JSON.stringify(video));
+      await redis.set(JSON.stringify({ slug }), JSON.stringify(video));
     }
   } else {
     video = JSON.parse(videoCached);
@@ -142,5 +132,5 @@ const getStaticProps = async ({ params: { slug } }) => {
   };
 };
 
-export { getStaticProps, getStaticPaths };
+export { getServerSideProps };
 export default PostPage;
