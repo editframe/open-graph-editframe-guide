@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@editframe/editframe-js": "^2.4.6",
+    "@editframe/editframe-js": "^3.0.0",
     "autoprefixer": "^10.4.7",
     "dotenv": "^16.0.1",
     "gray-matter": "^4.0.3",

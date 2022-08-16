@@ -113,7 +113,7 @@ const getServerSideProps = async ({ req, res, params }) => {
   let video;
   let videoCached = await redis.get(JSON.stringify({ slug }));
   if (videoCached == null) {
-    video = await composition.encode({ synchronously: true });
+    video = await composition.encodeSync();
     if (video && video.streamUrl) {
       await redis.set(JSON.stringify({ slug }), JSON.stringify(video));
     }
